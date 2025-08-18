@@ -34,11 +34,11 @@ const Hero = () => {
 
             <div className='flex justify-center relative my-20 z-10'>
                 <div className='max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center'>
-                    <h2 className='uppercase tracking-widest text-xs text-center text-blue-100 max-w-100'>Dynamic Web Magic with NextJS</h2>
-                    <TextGenerateEffect className='text-center text-[40px] md:text-5xl lg:text-6xl' words='Transforming concepts into seamless experiences'></TextGenerateEffect>
+                    <h2 className='uppercase tracking-widest text-xs text-center text-blue-100 max-w-100'>Turning vision into {' '} <span className='text-purple'>digital reality.</span> </h2>
+                    <TextGenerateEffect className='text-center text-[40px] md:text-5xl lg:text-6xl' words='I don’t just build websites, I craft solutions.'></TextGenerateEffect>
 
-                    <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>Hi, I'm Zakaria, a full stack developer based in Amsterdam</p>
-                    <a href="/about">
+                    <p className='text-center w-[40vw] md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>Hi, I'm Zakaria, a third year AI bachelor student at VU Amsterdam</p>
+                    <a href="#projects">
                     <MagicButton title='Check my work' icon={<FaLocationArrow/>} position='right'></MagicButton>
                     </a>
                 </div>

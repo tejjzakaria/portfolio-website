@@ -7,14 +7,17 @@ import { FaLocationArrow } from 'react-icons/fa'
 
 const RecentProjects = () => {
     return (
-        <div className='py-20'>
-            <h1 className='heading'>A small selection of {' '} <span className='text-purple'>recent projects
-            </span></h1>
-            <div className='flex flex-wrap items-center justify-center p-4 gap-x-24 gap-y-8 mt-10'>
+        <div className='py-20 flex flex-col justify-center items-center' id='projects'>
+            <div className='w-[60vw]'>
+                <h1 className='heading text-center'>A small selection of {' '} <span className='text-purple'>recent projects
+                </span></h1>
+                <p className='text-center mt-6 font-light'>Here’s a glimpse of some of the projects I’ve been working on recently. Each project highlights my skills in web development, design, and problem-solving, showcasing how I bring ideas to life through clean code and thoughtful user experiences.</p>
+            </div>
+            <div className='flex flex-wrap items-center justify-center p-4 gap-16 gap-y-0 mt-10'>
                 {projects.map(({ id, title, des, img, iconLists, link }) => (
-                    <div key={id} className='lg:min-h-[32.5rem] flex items-center justify-center w-[80vw] sm:h-[41rem] h-[32rem] sm:w-[570px]'>
-                        <PinContainer title={link} href={link} >
-                            <div className='relative flex items-center justify-center w-[80vw] overflow-hidden lg:h-[30vh] mb-10 sm:w-[570px] sm:h-[40vh] h-[30vh]'>
+                    <div key={id} className='lg:min-h-[32.5rem] h-[25rem] flex items-center justify-center sm:w-96 w-[80vw]'>
+                        <PinContainer title={link} href={link}>
+                            <div className='relative flex items-center justify-center sm:w-96 w-[80vw] overflow-hidden h-[20vh] lg:h-[30vh] mb-10'>
                                 <div className='relative w-full h-full overflow-hidden lg:rounded-3xl bg-[#13162d]'>
                                     <img src="/bg.png" alt="bg-img" />
                                 </div>
