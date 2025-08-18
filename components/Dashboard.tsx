@@ -1,7 +1,5 @@
 "use client";
 import React from "react";
-import { usePathname } from "next/navigation"; // For App Router
-
 import { TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,10 +9,10 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { DataTable } from "@/components/UsersTable";
+import { DataTable } from "./UsersTable";
 import { clients } from "@/data";
-import RecentProjectsDash from "@/components/RecentProjectsDash";
-import { Navbar } from "@/components/SideBarNav"; // Import the separated navbar
+import RecentProjectsDash from "./RecentProjectsDash";
+import { Navbar } from "./SideBarNav"; // Import the separated navbar
 
 // Dashboard content component (without navbar)
 const DashboardContent = () => {
@@ -171,12 +169,9 @@ const DashboardContent = () => {
 };
 
 // Main Dashboard component with navbar
-export default function Dashboard() {
-    const pathname = usePathname(); // App Router
-    // Extract the last segment for active state (e.g., 'dashboard')
-    const currentSection = pathname.split("/")[2] || "dashboard";
+export function Dashboard() {
     return (
-        <Navbar currentPath={"/admin/" + currentSection}>
+        <Navbar>
             <DashboardContent />
         </Navbar>
     );
