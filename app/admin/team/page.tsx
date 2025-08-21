@@ -1,34 +1,13 @@
 // Example 1: Clients Page with Active State
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
-import { DataTable } from "@/components/UsersTable";
+import { DataTable } from "@/components/TeamTable";
+import { team } from "@/data";
 
-
-
-
-const ClientsContent = () => {
-
-    const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch("/api/clients")
-            .then((res) => res.json())
-            .then((data) => {
-                console.log('Fetched clients:', data.clients);
-                setClients(data.clients || []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setLoading(false);
-            });
-    }, []);
-
-
+const TeamContent = () => {
     return (
         // Fixed Container Component
         <div className="min-h-screen w-full pt-[8vh]"
@@ -39,30 +18,30 @@ const ClientsContent = () => {
                 {/* Header Section */}
                 <div className="mb-8 text-center sm:text-left">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-                        Latest Clients
+                        Team members
                     </h1>
                     <p className="text-neutral-400 text-sm sm:text-base">
-                        A glimpse of your recent registered clients.
+                        People you work with.
                     </p>
                 </div>
 
                 {/* DataTable Section */}
                 <div className="w-full">
-                    <DataTable data={clients} />
+                    <DataTable data={team} />
                 </div>
             </div>
         </div>
     );
 };
 
-export default function ClientsPage() {
+export default function TeamPage() {
     // Get current path for active state
     const pathname = usePathname(); // App Router
     // const router = useRouter(); const pathname = router.pathname; // Pages Router
 
     return (
         <Navbar currentPath={pathname}>
-            <ClientsContent />
+            <TeamContent />
         </Navbar>
     );
 }

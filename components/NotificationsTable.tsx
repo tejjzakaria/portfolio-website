@@ -36,6 +36,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import {
+    Calendar1Icon,
   CheckCircle2Icon,
   CheckCircleIcon,
   ChevronDownIcon,
@@ -108,12 +109,9 @@ import {
 } from "@/components/ui/tabs"
 
 export const schema = z.object({
-  id: z.string(),
-  client: z.string(),
-  company: z.string(),
-  email: z.string(),
-  phone: z.string(),
-  projects: z.array(z.string()),
+  id: z.number(),
+  title: z.string(),
+  message: z.string(),
   status: z.string(),
 })
 
@@ -148,48 +146,25 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "client",
-    header: "Client",
-    cell: ({ row }) => (
-      <div className="w-20">
-          <h1 className="text-sm">{row.original.client}</h1>
-        
-      </div>
-    ),
-  },
-  {
-    accessorKey: "company",
-    header: "Company",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="px-1.5 text-muted-foreground text-white border border-white">
-          {row.original.company}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    header: "Contact",
+    accessorKey: "title",
+    header: "Title",
     cell: ({ row }) => (
       <div className="w-46">
-        <p className="font-medium">{row.original.email}</p>
-        <p className="font-light">{row.original.phone}</p>
+        <p className="font-medium">{row.original.title}</p>
       </div>
     ),
   },
   {
-    accessorKey: "projects",
-    header: "Projects",
+    accessorKey: "message",
+    header: "Message",
     cell: ({ row }) => (
-      <div className="w-40">
-        {typeof row.original.projects === "string"
-          ? row.original.projects
-          : Array.isArray(row.original.projects)
-            ? row.original.projects.join(", ")
-            : ""}
+      <div className="w-46">
+        <p className="font-medium">{row.original.message}</p>
       </div>
     ),
   },
+  
+  
 
   {
     accessorKey: "status",
@@ -200,7 +175,6 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const statusColors: Record<string, string> = {
         active: "border-green-500/20 bg-green-500/10 text-green-400",
         inactive: "border-red-500/20 bg-red-500/10 text-red-400",
-        archived: "border-orange-500/20 bg-orange-500/10 text-orange-400",
       };
 
       return (
@@ -219,67 +193,27 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
   {
     id: "actions",
-    cell: ({ row }) => {
-      const [confirmOpen, setConfirmOpen] = React.useState(false);
-      const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
-
-      const handleEdit = () => {
-        if (router) {
-          router.push(`/admin/clients/edit-client?id=${row.original.id}`);
-        } else if (typeof window !== 'undefined') {
-          window.location.href = `/admin/clients/edit-client?id=${row.original.id}`;
-        }
-      };
-
-      const handleDelete = async () => {
-        setConfirmOpen(false);
-        try {
-          const res = await fetch(`/api/clients/${row.original.id}`, {
-            method: 'DELETE',
-          });
-          if (!res.ok) throw new Error('Failed to delete client');
-          toast.success('Client deleted successfully');
-          // Optionally, trigger a refresh or callback to parent to reload data
-          if (typeof window !== 'undefined') window.location.reload();
-        } catch (err) {
-          const message = err && typeof err === 'object' && 'message' in err ? (err as any).message : 'Error deleting client';
-          toast.error(message);
-        }
-      };
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                size="icon"
-              >
-                <MoreVerticalIcon />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setConfirmOpen(true)}>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {confirmOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-6 w-full max-w-xs flex flex-col items-center">
-                <h3 className="text-lg font-semibold mb-2 text-center">Delete Client?</h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-4 text-center">Are you sure you want to delete this client? This action cannot be undone.</p>
-                <div className="flex gap-2 w-full">
-                  <Button className="flex-1" variant="destructive" onClick={handleDelete}>Delete</Button>
-                  <Button className="flex-1" variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      );
-    },
+    cell: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            size="icon"
+          >
+            <MoreVerticalIcon />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem>Favorite</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
   },
 ]
 
@@ -313,12 +247,7 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[]
 }) {
-  React.useEffect(() => {
-    console.log('DataTable received data:', initialData);
-  }, [initialData]);
-
-  // Use the data prop directly so the table updates when data changes
-  const data = initialData;
+  const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -368,10 +297,14 @@ export function DataTable({
   })
 
   function handleDragEnd(event: DragEndEvent) {
-    // Drag-and-drop row reordering is disabled because data is now controlled by props
-    // If you want to support row reordering, you must lift state up to the parent and update the API
-    // For now, this is a no-op
-    return;
+    const { active, over } = event
+    if (active && over && active.id !== over.id) {
+      setData((data) => {
+        const oldIndex = dataIds.indexOf(active.id)
+        const newIndex = dataIds.indexOf(over.id)
+        return arrayMove(data, oldIndex, newIndex)
+      })
+    }
   }
 
   return (
@@ -627,166 +560,5 @@ const chartConfig = {
     color: "var(--primary)",
   },
 } satisfies ChartConfig
-
-//function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-//  const isMobile = useIsMobile()
-//
-//  return (
-//    <Sheet>
-//      <SheetTrigger asChild>
-//        <Button variant="link" className="w-fit px-0 text-left text-foreground">
-//          {item.header}
-//        </Button>
-//      </SheetTrigger>
-//      <SheetContent side="right" className="flex flex-col">
-//        <SheetHeader className="gap-1">
-//          <SheetTitle>{item.header}</SheetTitle>
-//          <SheetDescription>
-//            Showing total visitors for the last 6 months
-//          </SheetDescription>
-//        </SheetHeader>
-//        <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
-//          {!isMobile && (
-//            <>
-//              <ChartContainer config={chartConfig}>
-//                <AreaChart
-//                  accessibilityLayer
-//                  data={chartData}
-//                  margin={{
-//                    left: 0,
-//                    right: 10,
-//                  }}
-//                >
-//                  <CartesianGrid vertical={false} />
-//                  <XAxis
-//                    dataKey="month"
-//                    tickLine={false}
-//                    axisLine={false}
-//                    tickMargin={8}
-//                    tickFormatter={(value) => value.slice(0, 3)}
-//                    hide
-//                  />
-//                  <ChartTooltip
-//                    cursor={false}
-//                    content={<ChartTooltipContent indicator="dot" />}
-//                  />
-//                  <Area
-//                    dataKey="mobile"
-//                    type="natural"
-//                    fill="var(--color-mobile)"
-//                    fillOpacity={0.6}
-//                    stroke="var(--color-mobile)"
-//                    stackId="a"
-//                  />
-//                  <Area
-//                    dataKey="desktop"
-//                    type="natural"
-//                    fill="var(--color-desktop)"
-//                    fillOpacity={0.4}
-//                    stroke="var(--color-desktop)"
-//                    stackId="a"
-//                  />
-//                </AreaChart>
-//              </ChartContainer>
-//              <Separator />
-//              <div className="grid gap-2">
-//                <div className="flex gap-2 font-medium leading-none">
-//                  Trending up by 5.2% this month{" "}
-//                  <TrendingUpIcon className="size-4" />
-//                </div>
-//                <div className="text-muted-foreground">
-//                  Showing total visitors for the last 6 months. This is just
-//                  some random text to test the layout. It spans multiple lines
-//                  and should wrap around.
-//                </div>
-//              </div>
-//              <Separator />
-//            </>
-//          )}
-//          <form className="flex flex-col gap-4">
-//            <div className="flex flex-col gap-3">
-//              <Label htmlFor="header">Header</Label>
-//              <Input id="header" defaultValue={item.header} />
-//            </div>
-//            <div className="grid grid-cols-2 gap-4">
-//              <div className="flex flex-col gap-3">
-//                <Label htmlFor="type">Type</Label>
-//                <Select defaultValue={item.type}>
-//                  <SelectTrigger id="type" className="w-full">
-//                    <SelectValue placeholder="Select a type" />
-//                  </SelectTrigger>
-//                  <SelectContent>
-//                    <SelectItem value="Table of Contents">
-//                      Table of Contents
-//                    </SelectItem>
-//                    <SelectItem value="Executive Summary">
-//                      Executive Summary
-//                    </SelectItem>
-//                    <SelectItem value="Technical Approach">
-//                      Technical Approach
-//                    </SelectItem>
-//                    <SelectItem value="Design">Design</SelectItem>
-//                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-//                    <SelectItem value="Focus Documents">
-//                      Focus Documents
-//                    </SelectItem>
-//                    <SelectItem value="Narrative">Narrative</SelectItem>
-//                    <SelectItem value="Cover Page">Cover Page</SelectItem>
-//                  </SelectContent>
-//                </Select>
-//              </div>
-//              <div className="flex flex-col gap-3">
-//                <Label htmlFor="status">Status</Label>
-//                <Select defaultValue={item.status}>
-//                  <SelectTrigger id="status" className="w-full">
-//                    <SelectValue placeholder="Select a status" />
-//                  </SelectTrigger>
-//                  <SelectContent>
-//                    <SelectItem value="Done">Done</SelectItem>
-//                    <SelectItem value="In Progress">In Progress</SelectItem>
-//                    <SelectItem value="Not Started">Not Started</SelectItem>
-//                  </SelectContent>
-//                </Select>
-//              </div>
-//            </div>
-//            <div className="grid grid-cols-2 gap-4">
-//              <div className="flex flex-col gap-3">
-//                <Label htmlFor="target">Target</Label>
-//                <Input id="target" defaultValue={item.target} />
-//              </div>
-//              <div className="flex flex-col gap-3">
-//                <Label htmlFor="limit">Limit</Label>
-//                <Input id="limit" defaultValue={item.limit} />
-//              </div>
-//            </div>
-//            <div className="flex flex-col gap-3">
-//              <Label htmlFor="reviewer">Reviewer</Label>
-//              <Select defaultValue={item.reviewer}>
-//                <SelectTrigger id="reviewer" className="w-full">
-//                  <SelectValue placeholder="Select a reviewer" />
-//                </SelectTrigger>
-//                <SelectContent>
-//                  <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-//                  <SelectItem value="Jamik Tashpulatov">
-//                    Jamik Tashpulatov
-//                  </SelectItem>
-//                  <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-//                </SelectContent>
-//              </Select>
-//            </div>
-//          </form>
-//        </div>
-//        <SheetFooter className="mt-auto flex gap-2 sm:flex-col sm:space-x-0">
-//          <Button className="w-full">Submit</Button>
-//          <SheetClose asChild>
-//            <Button variant="outline" className="w-full">
-//              Done
-//            </Button>
-//          </SheetClose>
-//        </SheetFooter>
-//      </SheetContent>
-//    </Sheet>
-//  )
-//}
 
 

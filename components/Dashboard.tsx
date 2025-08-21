@@ -147,23 +147,7 @@ const DashboardContent = () => {
 
             <RecentProjectsDash />
 
-            {/* DataTable Section */}
-            <div className="w-full flex flex-row max-w-7xl pb-8 justify-between items-center gap-4 px-7 hidden">
-                <div className="col-span-2">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold tracking-tight text-white">Latest Clients</h1>
-                        <p className="text-neutral-400">
-                            A glimpse of your recent registered clients.
-                        </p>
-                    </div>
-                    <div className="@container/main">
-                        <DataTable data={clients} />
-                    </div>
-                </div>
-                <div className="">
-                    <h1>xnxx</h1>
-                </div>
-            </div>
+            
         </div>
     );
 };

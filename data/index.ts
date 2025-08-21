@@ -1,3 +1,5 @@
+import { email } from "zod";
+
 export const navItems = [
   { name: "About", link: "#about" },
   { name: "Projects", link: "#projects" },
@@ -7,7 +9,7 @@ export const navItems = [
 ];
 
 export const gridItems = [
-  
+
   {
     id: 2,
     title: "I'm very flexible with time zone communications",
@@ -220,7 +222,7 @@ export const clients = [
       "Corporate website redesign",
       "SEO optimization project",
     ],
-    status: "Done",
+    status: "Inactive",
   },
   {
     id: 2,
@@ -233,7 +235,7 @@ export const clients = [
       "Admin dashboard",
       "API integration",
     ],
-    status: "Pending",
+    status: "Inactive",
   },
   {
     id: 3,
@@ -270,7 +272,7 @@ export const clients = [
       "Online ordering system",
       "Catering management dashboard",
     ],
-    status: "Complete",
+    status: "Active",
   },
 ];
 
@@ -282,7 +284,7 @@ export const projectsDash = [
     budget: 15000,
     description: "Revamping the company website with a modern UI/UX, improved SEO, and mobile responsiveness.",
     deadline: "2025-09-15",
-    progress: 65,
+    progress: "65",
     team: ["Alice Johnson", "Mark Lee", "Sara Kim"],
     priority: "Low",
   },
@@ -293,7 +295,7 @@ export const projectsDash = [
     budget: 45000,
     description: "Developed a cross-platform mobile application for both iOS and Android with offline support.",
     deadline: "2025-05-20",
-    progress: 100,
+    progress: "100",
     team: ["James Smith", "Linda Brown"],
     priority: "High",
   },
@@ -304,7 +306,7 @@ export const projectsDash = [
     budget: 20000,
     description: "Integrating an AI-powered chatbot into the customer support system to reduce response times.",
     deadline: "2025-11-01",
-    progress: 20,
+    progress: "20",
     team: ["Daniel Carter", "Sophia Martinez"],
     priority: "Medium",
   },
@@ -315,7 +317,7 @@ export const projectsDash = [
     budget: 30000,
     description: "Migrating the legacy e-commerce platform to Shopify for better scalability and performance.",
     deadline: "2025-08-30",
-    progress: 40,
+    progress: "40",
     team: ["Emily Davis", "Michael Wong", "Tom Harris"],
     priority: "High",
   },
@@ -326,7 +328,7 @@ export const projectsDash = [
     budget: 12000,
     description: "Launching a social media and PPC campaign to increase brand awareness and generate leads.",
     deadline: "2025-09-10",
-    progress: 55,
+    progress: "55",
     team: ["Olivia White", "Chris Taylor"],
     priority: "Medium",
   },
@@ -337,7 +339,7 @@ export const projectsDash = [
     budget: 60000,
     description: "Implemented a centralized data warehouse to streamline analytics and reporting.",
     deadline: "2025-06-01",
-    progress: 100,
+    progress: "100",
     team: ["Robert Green", "Sophia Brown", "Jason Miller"],
     priority: "High",
   },
@@ -402,5 +404,73 @@ export const notifications = [
   },
 ];
 
+export const team = [
+  {
+    id: 1,
+    name: "Aissam ACA",
+    email: "contact@aissamaca.com",
+    phone: "+31 6 00 00 00",
+    status: "active",
+  },
+  {
+    id: 2,
+    name: "Ayoub ACA",
+    email: "contact@ayoubaca.com",
+    phone: "+31 6 00 00 00",
+    status: "active",
+  },
+  {
+    id: 3,
+    name: "Yassine Tejjani",
+    email: "contact@tejjyassin.com",
+    phone: "+31 6 00 00 00",
+    status: "inactive",
+  },
+
+];
+
+export const announcements = [
+  {
+    id: 1,
+    title: "Beta message",
+    message: "This a message ",
+    status: "active",
+  },
+  {
+    id: 2,
+    title: "Beta message",
+    message: "This a message ",
+    status: "active",
+  },
+  {
+    id: 3,
+    title: "Beta message",
+    message: "This a message ",
+    status: "inactive",
+  },
+
+]; 
+
+export const notificationsTable = [
+  {
+    id: 1,
+    title: "Beta notification",
+    message: "This a notification ",
+    status: "active",
+  },
+  {
+    id: 2,
+    title: "Beta notification",
+    message: "This a notification ",
+    status: "active",
+  },
+  {
+    id: 3,
+    title: "Beta notification",
+    message: "This a notification ",
+    status: "inactive",
+  },
+
+];
 
 

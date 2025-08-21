@@ -5,8 +5,14 @@ import {
     IconArrowAutofitHeight,
     IconArrowLeft,
     IconBell,
+    IconBrandGithub,
     IconBrandTabler,
+    IconClock,
+    IconEyeDollar,
     IconFolders,
+    IconInvoice,
+    IconMoneybag,
+    IconQuestionMark,
     IconSettings,
     IconSpeakerphone,
     IconUserBolt,
@@ -167,16 +173,33 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                     href: "/admin/projects",
                     icon: <IconFolders className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
+                {
+                    label: "Timer",
+                    href: "/admin/timer",
+                    icon: <IconClock className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
+            ],
+        },
+        
+        {
+            group: "Finances",
+            items: [
+                
+                {
+                    label: "Invoices",
+                    href: "/admin/invoices",
+                    icon: <IconInvoice className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
+                {
+                    label: "Billables",
+                    href: "/admin/billables",
+                    icon: <IconEyeDollar className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
             ],
         },
         {
             group: "Management",
             items: [
-                {
-                    label: "Roles",
-                    href: "/admin/roles",
-                    icon: <IconUserCircle className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
                 {
                     label: "Team",
                     href: "/admin/team",
@@ -209,6 +232,22 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                 },
             ],
         },
+        {
+            group: "Other",
+            items: [
+                {
+                    label: "Github",
+                    href: "/admin/github",
+                    icon: <IconBrandGithub className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
+                {
+                    label: "Documentation",
+                    href: "/admin/docs",
+                    icon: <IconQuestionMark className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
+                
+            ],
+        },
     ];
 
     const [open, setOpen] = useState(false);
@@ -227,9 +266,11 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                     style={{
                         background: "rgb(4,7,29)",
                         backgroundColor: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
+                        scrollbarWidth: "none", // For Firefox
+                        msOverflowStyle: "none", // For IE and Edge
                     }}
                 >
-                    <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+                    <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto no-scrollbar" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                         <Logo />
                         <div className="mt-8 flex flex-col gap-6">
                             {links.map((group, groupIdx) => (

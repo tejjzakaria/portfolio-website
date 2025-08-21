@@ -36,6 +36,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import {
+    Calendar1Icon,
   CheckCircle2Icon,
   CheckCircleIcon,
   ChevronDownIcon,
@@ -108,13 +109,15 @@ import {
 } from "@/components/ui/tabs"
 
 export const schema = z.object({
-  id: z.string(),
-  client: z.string(),
-  company: z.string(),
-  email: z.string(),
-  phone: z.string(),
-  projects: z.array(z.string()),
+  id: z.number(),
+  name: z.string(),
   status: z.string(),
+  budget: z.number(),
+  description: z.string(),
+  deadline: z.string(),
+  progress: z.string(),
+  team: z.array(z.string()),
+  priority: z.string(),
 })
 
 
@@ -148,48 +151,40 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "client",
-    header: "Client",
+    accessorKey: "project",
+    header: "Project",
     cell: ({ row }) => (
-      <div className="w-20">
-          <h1 className="text-sm">{row.original.client}</h1>
-        
+      <div className="w-46">
+        <p className="font-medium">{row.original.name}</p>
+        <p className="font-light">{row.original.description}</p>
       </div>
     ),
   },
   {
-    accessorKey: "company",
-    header: "Company",
+    accessorKey: "budget",
+    header: "Budget",
     cell: ({ row }) => (
       <div className="w-32">
-        <Badge variant="outline" className="px-1.5 text-muted-foreground text-white border border-white">
-          {row.original.company}
+        <Badge variant="outline" className="px-1.5 text-muted-foreground bg-white text-black border border-white">
+          {row.original.budget} €
         </Badge>
       </div>
     ),
   },
   {
-    header: "Contact",
+    accessorKey: "deadline",
+    header: "Deadline",
     cell: ({ row }) => (
-      <div className="w-46">
-        <p className="font-medium">{row.original.email}</p>
-        <p className="font-light">{row.original.phone}</p>
+      <div className="w-32">
+        <Badge variant="outline" className="px-1.5 flex flex-row justify-center items-center gap-2 p-2 text-muted-foreground text-white border border-white">
+            <Calendar1Icon size="15"/>
+            <h1 className="text-xs">{row.original.deadline}</h1>
+        </Badge>
       </div>
     ),
   },
-  {
-    accessorKey: "projects",
-    header: "Projects",
-    cell: ({ row }) => (
-      <div className="w-40">
-        {typeof row.original.projects === "string"
-          ? row.original.projects
-          : Array.isArray(row.original.projects)
-            ? row.original.projects.join(", ")
-            : ""}
-      </div>
-    ),
-  },
+  
+  
 
   {
     accessorKey: "status",
@@ -199,8 +194,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
       const statusColors: Record<string, string> = {
         active: "border-green-500/20 bg-green-500/10 text-green-400",
-        inactive: "border-red-500/20 bg-red-500/10 text-red-400",
-        archived: "border-orange-500/20 bg-orange-500/10 text-orange-400",
+        completed: "border-green-500/20 bg-green-500/10 text-green-400",
+        "on-hold": "border-orange-500/20 bg-orange-500/10 text-orange-400",
+        pending: "border-blue-500/20 bg-blue-500/10 text-blue-400",
       };
 
       return (
@@ -219,67 +215,27 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
   {
     id: "actions",
-    cell: ({ row }) => {
-      const [confirmOpen, setConfirmOpen] = React.useState(false);
-      const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
-
-      const handleEdit = () => {
-        if (router) {
-          router.push(`/admin/clients/edit-client?id=${row.original.id}`);
-        } else if (typeof window !== 'undefined') {
-          window.location.href = `/admin/clients/edit-client?id=${row.original.id}`;
-        }
-      };
-
-      const handleDelete = async () => {
-        setConfirmOpen(false);
-        try {
-          const res = await fetch(`/api/clients/${row.original.id}`, {
-            method: 'DELETE',
-          });
-          if (!res.ok) throw new Error('Failed to delete client');
-          toast.success('Client deleted successfully');
-          // Optionally, trigger a refresh or callback to parent to reload data
-          if (typeof window !== 'undefined') window.location.reload();
-        } catch (err) {
-          const message = err && typeof err === 'object' && 'message' in err ? (err as any).message : 'Error deleting client';
-          toast.error(message);
-        }
-      };
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                size="icon"
-              >
-                <MoreVerticalIcon />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setConfirmOpen(true)}>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {confirmOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-6 w-full max-w-xs flex flex-col items-center">
-                <h3 className="text-lg font-semibold mb-2 text-center">Delete Client?</h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-4 text-center">Are you sure you want to delete this client? This action cannot be undone.</p>
-                <div className="flex gap-2 w-full">
-                  <Button className="flex-1" variant="destructive" onClick={handleDelete}>Delete</Button>
-                  <Button className="flex-1" variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      );
-    },
+    cell: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            size="icon"
+          >
+            <MoreVerticalIcon />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem>Favorite</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
   },
 ]
 
@@ -313,12 +269,7 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[]
 }) {
-  React.useEffect(() => {
-    console.log('DataTable received data:', initialData);
-  }, [initialData]);
-
-  // Use the data prop directly so the table updates when data changes
-  const data = initialData;
+  const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -368,10 +319,14 @@ export function DataTable({
   })
 
   function handleDragEnd(event: DragEndEvent) {
-    // Drag-and-drop row reordering is disabled because data is now controlled by props
-    // If you want to support row reordering, you must lift state up to the parent and update the API
-    // For now, this is a no-op
-    return;
+    const { active, over } = event
+    if (active && over && active.id !== over.id) {
+      setData((data) => {
+        const oldIndex = dataIds.indexOf(active.id)
+        const newIndex = dataIds.indexOf(over.id)
+        return arrayMove(data, oldIndex, newIndex)
+      })
+    }
   }
 
   return (

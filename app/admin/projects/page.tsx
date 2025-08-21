@@ -1,34 +1,13 @@
 // Example 1: Clients Page with Active State
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
-import { DataTable } from "@/components/UsersTable";
+import { DataTable } from "@/components/ProjectsTable";
+import { projectsDash } from "@/data";
 
-
-
-
-const ClientsContent = () => {
-
-    const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch("/api/clients")
-            .then((res) => res.json())
-            .then((data) => {
-                console.log('Fetched clients:', data.clients);
-                setClients(data.clients || []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setLoading(false);
-            });
-    }, []);
-
-
+const ProjectsContent = () => {
     return (
         // Fixed Container Component
         <div className="min-h-screen w-full pt-[8vh]"
@@ -39,78 +18,26 @@ const ClientsContent = () => {
                 {/* Header Section */}
                 <div className="mb-8 text-center sm:text-left">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-                        Latest Clients
+                        All Projects
                     </h1>
                     <p className="text-neutral-400 text-sm sm:text-base">
-                        A glimpse of your recent registered clients.
+                        A list of all projects.
                     </p>
                 </div>
 
                 {/* DataTable Section */}
                 <div className="w-full">
-                    <DataTable data={clients} />
+                    <DataTable data={projectsDash} />
                 </div>
             </div>
         </div>
     );
 };
 
-export default function ClientsPage() {
+export default function ProjectsPage() {
     // Get current path for active state
     const pathname = usePathname(); // App Router
     // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
-    return (
-        <Navbar currentPath={pathname}>
-            <ClientsContent />
-        </Navbar>
-    );
-}
-
-// Example 2: Projects Page with Active State
-const ProjectsContent = () => {
-    return (
-        <div className="flex flex-col items-center justify-start gap-8 border bg-white p-4 dark:border-neutral-700 mx-auto w-full h-full"
-            style={{
-                background: "rgb(4,7,29)",
-                backgroundColor: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-            }}>
-            <div className="w-full max-w-7xl pt-8">
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-8">Projects Overview</h1>
-                {/* Your projects content here */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 group hover:bg-white/10 transition-all duration-300">
-                        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">Project Alpha</h3>
-                        <p className="text-neutral-300">Description of project alpha...</p>
-                        <div className="mt-4 flex gap-2">
-                            <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-500/30">
-                                Active
-                            </span>
-                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
-                                Frontend
-                            </span>
-                        </div>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 group hover:bg-white/10 transition-all duration-300">
-                        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">Project Beta</h3>
-                        <p className="text-neutral-300">Description of project beta...</p>
-                        <div className="mt-4 flex gap-2">
-                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full border border-yellow-500/30">
-                                In Progress
-                            </span>
-                            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30">
-                                Full Stack
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export function ProjectsPage() {
-    const pathname = usePathname();
 
     return (
         <Navbar currentPath={pathname}>
@@ -118,6 +45,8 @@ export function ProjectsPage() {
         </Navbar>
     );
 }
+
+
 
 // Example 3: Settings Page with Active State
 const SettingsContent = () => {
