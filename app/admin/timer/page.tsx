@@ -1,21 +1,68 @@
 // Example 1: Clients Page with Active State
 "use client";
 import React from "react";
+import Select from "react-select";
 import { usePathname } from "next/navigation"; // For App Router
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
-import { DataTable } from "@/components/TeamTable";
-import { team } from "@/data";
-import { PauseCircle, PauseIcon, PlayIcon, StopCircle, StopCircleIcon } from "lucide-react";
 
+import { PauseIcon, PlayIcon, StopCircleIcon } from "lucide-react";
 
-const TimerContent = () => {
+export default function TimerPage() {
+    const pathname = usePathname();
 
+    // TimerContent inlined here (restored)
     const [time, setTime] = React.useState(0); // in ms
     const [isRunning, setIsRunning] = React.useState(false);
     const [intervalId, setIntervalId] = React.useState<NodeJS.Timeout | null>(null);
     const [sessionStart, setSessionStart] = React.useState<Date | null>(null);
     const [sessionEnd, setSessionEnd] = React.useState<Date | null>(null);
+
+    // Dropdown state
+    const [projects, setProjects] = React.useState<{ value: string, label: string }[]>([]);
+    const [clients, setClients] = React.useState<{ value: string, label: string }[]>([]);
+    const [selectedProject, setSelectedProject] = React.useState<{ value: string, label: string } | null>(null);
+    const [selectedClient, setSelectedClient] = React.useState<{ value: string, label: string } | null>(null);
+
+    // Fetch projects and clients on mount (fixed mapping for API response)
+    React.useEffect(() => {
+        fetch("/api/projects")
+            .then(res => res.json())
+            .then(data => {
+                // API returns { projects: [{ id, name, ... }] }
+                const safeProjects = (data.projects || [])
+                  .filter((p: any) => p.id && (p.name || p.project))
+                  .map((p: any) => ({
+                    value: p.id,
+                    label: p.name || p.project,
+                }));
+                setProjects(safeProjects);
+                if (!Array.isArray(data.projects)) {
+                  console.error('Projects API returned unexpected data:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching projects:', err);
+            });
+        fetch("/api/clients")
+            .then(res => res.json())
+            .then(data => {
+                // API returns { clients: [{ id, client, ... }] }
+                const safeClients = (data.clients || [])
+                  .filter((c: any) => c.id && (c.client || c.name))
+                  .map((c: any) => ({
+                    value: c.id,
+                    label: c.client || c.name,
+                }));
+                setClients(safeClients);
+                if (!Array.isArray(data.clients)) {
+                  console.error('Clients API returned unexpected data:', data);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching clients:', err);
+            });
+    }, []);
 
     React.useEffect(() => {
         if (isRunning) {
@@ -46,6 +93,8 @@ const TimerContent = () => {
     const [showBillable, setShowBillable] = React.useState(false);
     const [pendingStop, setPendingStop] = React.useState(false);
     const handleStop = () => {
+        if (!isRunning) return; // Prevent stop if not running
+        setIsRunning(false); // Stop the timer immediately
         setSessionEnd(new Date());
         setShowConfirm(true);
     };
@@ -60,7 +109,9 @@ const TimerContent = () => {
 
     // Billable logic
     const [showSuccess, setShowSuccess] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const handleBillable = async (isBillable: boolean) => {
+        setIsSubmitting(true);
         setIsRunning(false);
         setShowBillable(false);
         setPendingStop(false);
@@ -69,27 +120,46 @@ const TimerContent = () => {
         setSessionEnd(end);
         const totalHours = time / 3600000;
         let success = false;
-        if (start && end && totalHours > 0) {
+        if (
+            start &&
+            end &&
+            totalHours > 0 &&
+            selectedProject && selectedProject.value &&
+            selectedClient && selectedClient.value
+        ) {
+            const payload = {
+                startTime: start,
+                endTime: end,
+                billable: isBillable,
+                totalHours,
+                project: selectedProject.value,
+                client: selectedClient.value,
+            };
             try {
                 const res = await fetch('/api/billable', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        startTime: start,
-                        endTime: end,
-                        billable: isBillable,
-                        totalHours,
-                    }),
+                    body: JSON.stringify(payload),
                 });
-                if (res.ok) success = true;
+                if (res.ok) {
+                    success = true;
+                } else {
+                    const error = await res.text();
+                    console.error('API error:', error);
+                }
             } catch (err) {
-                // Optionally show error toast
+                console.error('Network or fetch error:', err);
             }
+        } else {
+            console.error('Validation failed:', { start, end, totalHours, selectedProject, selectedClient });
         }
         setTime(0);
         setSessionStart(null);
         setSessionEnd(null);
+        setSelectedProject(null);
+        setSelectedClient(null);
         setShowSuccess(success);
+        setIsSubmitting(false);
         if (success) {
             setTimeout(() => {
                 setShowSuccess(false);
@@ -107,120 +177,163 @@ const TimerContent = () => {
     const ms = Math.floor((time % 1000) / 10);
 
     return (
-        <div className="min-h-screen w-full pt-[8vh]"
-            style={{
-                background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
-            }}>
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
-                {/* Header Section */}
-                <div className="mb-8 text-center sm:text-left">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-                        Timer
-                    </h1>
-                    <p className="text-neutral-400 text-sm sm:text-base">
-                        Record work sessions here.
-                    </p>
-                </div>
-                {/* Timer UI */}
-                <div className="flex flex-col items-center justify-center gap-6 mt-12">
-                    <div className="text-5xl sm:text-6xl font-mono font-bold text-white tracking-widest bg-white/5 rounded-xl px-8 py-6 border border-white/10 shadow-lg">
-                        {pad(hrs)}:{pad(mins)}:{pad(secs)}<span className="text-3xl font-mono font-bold text-white/70">.{pad(ms)}</span>
+        <Navbar currentPath={pathname}>
+            <div className="min-h-screen w-full pt-[8vh]"
+                style={{
+                    background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
+                }}>
+                <div className="container mx-auto px-4 py-8 max-w-7xl">
+                    {/* Header Section */}
+                    <div className="mb-8 text-center sm:text-left">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+                            Timer
+                        </h1>
+                        <p className="text-neutral-400 text-sm sm:text-base">
+                            Record work sessions here.
+                        </p>
                     </div>
-                    <div className="flex gap-4 mt-4">
-                        <button
-                            onClick={handleStart}
-                            className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow transition disabled:opacity-60"
-                            disabled={isRunning}
-                        >
-                            <PlayIcon/>
-                        </button>
-                        <button
-                            onClick={handlePause}
-                            className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-lg shadow transition disabled:opacity-60"
-                            disabled={!isRunning}
-                        >
-                            <PauseIcon/>
-                        </button>
-                        <button
-                            onClick={handleStop}
-                            className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm shadow transition"
-                        >
-                            <StopCircleIcon/>
-                        </button>
-                    </div>
-                    {showConfirm && (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'rgba(16,18,27,0.85)' }}>
-                            <div
-                                className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative"
-                                style={{
-                                    zIndex: 10000,
-                                    pointerEvents: 'auto',
-                                    background: 'var(--body-bg, #10121b)',
-                                    backdropFilter: 'none',
-                                    boxShadow: 'none',
+                    {/* Project/Client Selection at Top */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-8">
+                        <div className="w-64">
+                            <label className="block text-sm font-medium text-white mb-1">Project</label>
+                            <Select
+                                classNamePrefix="react-select"
+                                value={selectedProject}
+                                onChange={setSelectedProject}
+                                options={projects}
+                                placeholder="Select a project"
+                                isClearable
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
+                                        borderColor: 'rgba(255,255,255,0.2)',
+                                        color: 'white',
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: 'white' }),
+                                    menu: (base) => ({ ...base, backgroundColor: '#10121b', color: 'white' }),
+                                    option: (base, state) => ({
+                                        ...base,
+                                        backgroundColor: state.isFocused ? 'rgba(31,38,135,0.2)' : 'transparent',
+                                        color: 'white',
+                                    }),
+                                    input: (base) => ({ ...base, color: 'white' }),
                                 }}
+                            />
+                        </div>
+                        <div className="w-64">
+                            <label className="block text-sm font-medium text-white mb-1">Client</label>
+                            <Select
+                                classNamePrefix="react-select"
+                                value={selectedClient}
+                                onChange={setSelectedClient}
+                                options={clients}
+                                placeholder="Select a client"
+                                isClearable
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
+                                        borderColor: 'rgba(255,255,255,0.2)',
+                                        color: 'white',
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: 'white' }),
+                                    menu: (base) => ({ ...base, backgroundColor: '#10121b', color: 'white' }),
+                                    option: (base, state) => ({
+                                        ...base,
+                                        backgroundColor: state.isFocused ? 'rgba(31,38,135,0.2)' : 'transparent',
+                                        color: 'white',
+                                    }),
+                                    input: (base) => ({ ...base, color: 'white' }),
+                                }}
+                            />
+                        </div>
+                    </div>
+                    {/* Timer UI */}
+                    <div className="flex flex-col items-center justify-center gap-6 mt-12">
+                        <div className="text-5xl sm:text-6xl font-mono font-bold text-white tracking-widest bg-white/5 rounded-xl px-8 py-6 border border-white/10 shadow-lg">
+                            {pad(hrs)}:{pad(mins)}:{pad(secs)}<span className="text-3xl font-mono font-bold text-white/70">.{pad(ms)}</span>
+                        </div>
+                        <div className="flex gap-4 mt-4">
+                            <button
+                                onClick={handleStart}
+                                className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow transition disabled:opacity-60"
+                                disabled={isRunning || !selectedProject || !selectedClient}
                             >
-                                <h3 className="text-lg font-semibold mb-2 text-center text-white">Stop Timer?</h3>
-                                <p className="text-sm text-neutral-300 mb-4 text-center">Are you sure you want to stop and reset the timer?</p>
-                                <div className="flex gap-2 w-full">
-                                    <button className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold" onClick={confirmStop}>Stop</button>
-                                    <button className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/20" onClick={cancelStop}>Cancel</button>
+                                <PlayIcon/>
+                            </button>
+                            <button
+                                onClick={handlePause}
+                                className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-lg shadow transition disabled:opacity-60"
+                                disabled={!isRunning}
+                            >
+                                <PauseIcon/>
+                            </button>
+                            <button
+                                onClick={handleStop}
+                                className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm shadow transition disabled:opacity-60"
+                                disabled={!isRunning || !selectedProject || !selectedClient}
+                            >
+                                <StopCircleIcon/>
+                            </button>
+                        </div>
+
+                        {/* Confirmation Modal: Are you sure you want to stop? */}
+                        {showConfirm && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                                <div className="bg-[#181a23] rounded-lg shadow-lg p-8 w-full max-w-md border border-white/10">
+                                    <h2 className="text-xl font-bold text-white mb-4">Stop Session?</h2>
+                                    <p className="text-neutral-300 mb-6">Are you sure you want to stop the timer?</p>
+                                    <div className="flex gap-4 justify-end">
+                                        <button
+                                            className="px-4 py-2 rounded bg-neutral-700 text-white hover:bg-neutral-600 transition"
+                                            onClick={cancelStop}
+                                            disabled={isSubmitting}
+                                        >Cancel</button>
+                                        <button
+                                            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition"
+                                            onClick={confirmStop}
+                                            disabled={isSubmitting}
+                                        >Stop</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                    {showSuccess && (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'rgba(16,18,27,0.85)' }}>
-                            <div
-                                className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative"
-                                style={{
-                                    zIndex: 10000,
-                                    pointerEvents: 'auto',
-                                    background: 'var(--body-bg, #10121b)',
-                                    backdropFilter: 'none',
-                                    boxShadow: 'none',
-                                }}
-                            >
-                                <h3 className="text-lg font-semibold mb-2 text-center text-white">Session Recorded</h3>
-                                <p className="text-sm text-neutral-300 mb-2 text-center">Your work session has been recorded successfully.</p>
-                            </div>
-                        </div>
-                    )}
-                    {showBillable && !showSuccess && (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'rgba(16,18,27,0.85)' }}>
-                            <div
-                                className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative"
-                                style={{
-                                    zIndex: 10000,
-                                    pointerEvents: 'auto',
-                                    background: 'var(--body-bg, #10121b)',
-                                    backdropFilter: 'none',
-                                    boxShadow: 'none',
-                                }}
-                            >
-                                <h3 className="text-lg font-semibold mb-2 text-center text-white">Billable Session?</h3>
-                                <p className="text-sm text-neutral-300 mb-4 text-center">Is this work session billable?</p>
-                                <div className="flex gap-2 w-full">
-                                    <button className="flex-1 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold" onClick={() => handleBillable(true)}>Yes</button>
-                                    <button className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/20" onClick={() => handleBillable(false)}>No</button>
+                        )}
+
+                        {/* Billable Modal: Is this session billable? */}
+                        {showBillable && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                                <div className="bg-[#181a23] rounded-lg shadow-lg p-8 w-full max-w-md border border-white/10">
+                                    <h2 className="text-xl font-bold text-white mb-4">Billable Session?</h2>
+                                    <p className="text-neutral-300 mb-6">Is this session billable?</p>
+                                    <div className="flex gap-4 justify-end">
+                                        <button
+                                            className="px-4 py-2 rounded bg-neutral-700 text-white hover:bg-neutral-600 transition"
+                                            onClick={() => handleBillable(false)}
+                                            disabled={isSubmitting}
+                                        >No</button>
+                                        <button
+                                            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition"
+                                            onClick={() => handleBillable(true)}
+                                            disabled={isSubmitting}
+                                        >Yes</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+
+                        {/* Success Message */}
+                        {showSuccess && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                                <div className="bg-[#181a23] rounded-lg shadow-lg p-8 w-full max-w-md border border-white/10 flex flex-col items-center">
+                                    <h2 className="text-2xl font-bold text-green-400 mb-2">Session Saved!</h2>
+                                    <p className="text-neutral-300 mb-2">Your session has been recorded.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
-};
-
-export default function TimerPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-    // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
-    return (
-        <Navbar currentPath={pathname}>
-            <TimerContent />
         </Navbar>
     );
 }
