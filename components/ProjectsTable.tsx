@@ -53,6 +53,7 @@ import {
 } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { toast } from "sonner"
+// import "sonner/style.css"; // Not needed for latest sonner, handled automatically
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -215,27 +216,77 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <MoreVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const projectId = row.original.id;
+      const [confirmOpen, setConfirmOpen] = React.useState(false);
+      const [isDeleting, setIsDeleting] = React.useState(false);
+
+      const handleEdit = () => {
+        window.location.href = `/admin/projects/edit-project?id=${projectId}`;
+      };
+
+      const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+          const res = await fetch(`/api/projects/${projectId}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error("Failed to delete project");
+          toast.success("Project deleted successfully");
+          setConfirmOpen(false);
+          setTimeout(() => window.location.reload(), 500);
+        } catch (err) {
+          toast.error("Error deleting project");
+        } finally {
+          setIsDeleting(false);
+        }
+      };
+
+      // Use React Portal for the confirmation modal to ensure it overlays everything
+      const ReactDOM = typeof window !== 'undefined' ? require('./ReactDOMClientFix').default : null;
+      return (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                size="icon"
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirmOpen(true)} className="text-red-500 focus:text-red-600">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {confirmOpen && ReactDOM && ReactDOM.createPortal(
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'var(--body-bg, rgba(16,18,27,0.85))' }}>
+              <div
+                className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative"
+                style={{
+                  zIndex: 10000,
+                  pointerEvents: 'auto',
+                  background: 'var(--body-bg, #10121b)',
+                  backdropFilter: 'none',
+                  boxShadow: 'none',
+                }}
+              >
+                <h3 className="text-lg font-semibold mb-2 text-center">Delete Project?</h3>
+                <p className="text-sm text-neutral-300 mb-4 text-center">Are you sure you want to delete this project? This action cannot be undone.</p>
+                <div className="flex gap-2 w-full">
+                  <Button className="flex-1" variant="destructive" style={{ zIndex: 10001 }} onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Delete'}</Button>
+                  <Button className="flex-1" variant="outline" style={{ zIndex: 10001 }} onClick={() => setConfirmOpen(false)} disabled={isDeleting}>Cancel</Button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+        </>
+      );
+    },
   },
 ]
 

@@ -4,30 +4,69 @@ import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
+import { useEffect, useState } from "react";
 import { DataTable } from "@/components/ProjectsTable";
-import { projectsDash } from "@/data";
+import { IconPlus } from "@tabler/icons-react";
 
 const ProjectsContent = () => {
+    const [projects, setProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const res = await fetch("/api/projects");
+                if (!res.ok) throw new Error("Failed to fetch projects");
+                const data = await res.json();
+                setProjects(data.projects || []);
+            } catch (err) {
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("Error fetching projects");
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProjects();
+    }, []);
+
     return (
-        // Fixed Container Component
         <div className="min-h-screen w-full pt-[8vh]"
             style={{
                 background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
             }}>
             <div className="container mx-auto px-4 py-8 max-w-7xl">
-                {/* Header Section */}
-                <div className="mb-8 text-center sm:text-left">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-                        All Projects
-                    </h1>
-                    <p className="text-neutral-400 text-sm sm:text-base">
-                        A list of all projects.
-                    </p>
+                <div className="flex flex-row justify-between items-center">
+                    <div className="mb-8 text-center sm:text-left">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+                            All Projects
+                        </h1>
+                        <p className="text-neutral-400 text-sm sm:text-base">
+                            A list of all projects.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/admin/projects/add-project">
+                        <button className="flex justify-center items-center gap-1 group/btn relative h-10 rounded-lg border border-blue-400/60 bg-gradient-to-br from-blue-500/40 to-cyan-500/30 backdrop-blur-xl backdrop-saturate-200 font-medium text-white transition-all duration-300 hover:from-blue-500/60 hover:to-cyan-500/50 hover:border-blue-300/80 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-98 dark:border-blue-400/40 dark:from-blue-500/35 dark:to-cyan-500/25 dark:hover:from-blue-500/55 dark:hover:to-cyan-500/45 dark:hover:border-blue-300/60 dark:hover:shadow-blue-500/40 p-3">
+                            New
+                            <IconPlus/>
+                        </button>
+                        </a>
+                    </div>
                 </div>
-
-                {/* DataTable Section */}
                 <div className="w-full">
-                    <DataTable data={projectsDash} />
+                    {loading ? (
+                        <div className="text-white text-center py-8">Loading projects...</div>
+                    ) : error ? (
+                        <div className="text-red-400 text-center py-8">{error}</div>
+                    ) : (
+                        <DataTable data={projects} />
+                    )}
                 </div>
             </div>
         </div>
