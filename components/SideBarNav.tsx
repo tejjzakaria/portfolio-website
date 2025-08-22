@@ -184,17 +184,18 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
         {
             group: "Finances",
             items: [
+                {
+                    label: "Billables",
+                    href: "/admin/billables",
+                    icon: <IconEyeDollar className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
                 
                 {
                     label: "Invoices",
                     href: "/admin/invoices",
                     icon: <IconInvoice className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
-                {
-                    label: "Billables",
-                    href: "/admin/billables",
-                    icon: <IconEyeDollar className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
+                
             ],
         },
         {
