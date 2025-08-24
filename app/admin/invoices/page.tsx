@@ -50,6 +50,14 @@ const InvoicesContent = () => {
                             A list of all invoices.
                         </p>
                     </div>
+                    <div>
+                        <a href="/admin/invoices/add-invoice">
+                            <button className="flex justify-center items-center gap-1 group/btn relative h-10 rounded-lg border border-blue-400/60 bg-gradient-to-br from-blue-500/40 to-cyan-500/30 backdrop-blur-xl backdrop-saturate-200 font-medium text-white transition-all duration-300 hover:from-blue-500/60 hover:to-cyan-500/50 hover:border-blue-300/80 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-98 dark:border-blue-400/40 dark:from-blue-500/35 dark:to-cyan-500/25 dark:hover:from-blue-500/55 dark:hover:to-cyan-500/45 dark:hover:border-blue-300/60 dark:hover:shadow-blue-500/40 p-3">
+                                New
+                                <IconPlus />
+                            </button>
+                        </a>
+                    </div>
                 </div>
                 <div className="w-full">
                     {loading ? (

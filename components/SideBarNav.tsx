@@ -15,6 +15,7 @@ import {
     IconQuestionMark,
     IconSettings,
     IconSpeakerphone,
+    IconTicket,
     IconUserBolt,
     IconUserCheck,
     IconUserCircle,
@@ -27,31 +28,15 @@ import { cn } from "@/lib/utils";
 export const Logo = () => {
     return (
         <a
-            href="#"
+            href=""
             className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
         >
-            <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-            <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="font-medium whitespace-pre text-black dark:text-white"
-            >
-                tejjzakaria
-            </motion.span>
+            <img src="/tejjzakaria.png" alt="" width='190'/>
         </a>
     );
 };
 
-export const LogoIcon = () => {
-    return (
-        <a
-            href="#"
-            className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
-        >
-            <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-        </a>
-    );
-};
+
 
 // Custom SidebarLink component with active state styling
 interface CustomSidebarLinkProps {
@@ -177,6 +162,11 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                     label: "Timer",
                     href: "/admin/timer",
                     icon: <IconClock className="h-5 w-5 shrink-0 transition-colors duration-200" />,
+                },
+                {
+                    label: "Tickets",
+                    href: "/admin/tickets",
+                    icon: <IconTicket className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
             ],
         },

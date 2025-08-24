@@ -109,17 +109,19 @@ import {
 } from "@/components/ui/tabs"
 
 export const schema = z.object({
-  id: z.number(),
+  _id: z.string(),
   name: z.string(),
   email: z.string(),
-  phone: z.string(),
+  role: z.string(),
+  avatar: z.string().optional(),
   status: z.string(),
-})
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
 
 
 
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
-
   {
     id: "select",
     header: ({ table }) => (
@@ -149,50 +151,47 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <div className="w-46">
-        <p className="font-medium">{row.original.name}</p>
-      </div>
-    ),
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
-    accessorKey: "contact",
-    header: "Contact",
-    cell: ({ row }) => (
-      <div className="w-46">
-        <p className="font-medium">{row.original.email}</p>
-        <p className="font-light">{row.original.phone}</p>
-      </div>
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => <span>{row.original.email}</span>,
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => <span>{row.original.role}</span>,
+  },
+  {
+    accessorKey: "avatar",
+    header: "Avatar",
+    cell: ({ row }) => row.original.avatar ? (
+      <img src={row.original.avatar} alt="avatar" className="h-8 w-8 rounded-full object-cover" />
+    ) : (
+      <span className="text-neutral-500">N/A</span>
     ),
   },
-  
-  
-
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-
       const statusColors: Record<string, string> = {
         active: "border-green-500/20 bg-green-500/10 text-green-400",
         inactive: "border-red-500/20 bg-red-500/10 text-red-400",
       };
-
       return (
         <Badge
           variant="outline"
-          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"
-            }`}
+          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"}`}
         >
           <span className="text-xs whitespace-nowrap">{status}</span>
         </Badge>
       );
     },
   },
-
-
-
+  // timestamps columns removed as requested
   {
     id: "actions",
     cell: () => (
@@ -217,11 +216,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       </DropdownMenu>
     ),
   },
-]
+];
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
+    id: row.original._id,
   })
 
   return (
@@ -269,7 +268,7 @@ export function DataTable({
   )
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
+    () => data?.map(({ _id }) => _id) || [],
     [data]
   )
 
@@ -283,7 +282,7 @@ export function DataTable({
       columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => row._id.toString(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
