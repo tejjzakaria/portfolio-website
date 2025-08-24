@@ -107,128 +107,124 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 
+
 export const schema = z.object({
   id: z.string(),
-  client: z.string(),
-  company: z.string(),
-  email: z.string(),
-  phone: z.string(),
-  projects: z.array(z.string()),
+  invoiceNumber: z.string(),
+  client: z.object({
+    _id: z.string(),
+    client: z.string(),
+    email: z.string(),
+    company: z.string(),
+  }),
+  project: z.object({
+    _id: z.string(),
+    name: z.string(),
+  }),
+  amount: z.number(),
+  totalHours: z.number(),
+  hourlyRate: z.number(),
   status: z.string(),
 })
 
 
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
+const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center mx-2">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: "invoiceNumber",
+    header: "Invoice #",
+    cell: ({ row }) => <span className="font-mono text-base text-blue-300">{row.original.invoiceNumber}</span>,
   },
   {
     accessorKey: "client",
     header: "Client",
-    cell: ({ row }) => (
-      <div className="w-20">
-          <h1 className="text-sm">{row.original.client}</h1>
-        
-      </div>
-    ),
+    cell: ({ row }) => {
+      const client = row.original.client;
+      if (!client) return <span className="text-red-400">N/A</span>;
+      if (typeof client === 'string') return <span className="text-red-400">N/A</span>;
+      return (
+        <div className="flex flex-col gap-1">
+          <span className="text-base font-semibold text-blue-200">{client.client || 'N/A'}</span>
+          {client.company && <span className="text-xs text-white/60">{client.company}</span>}
+          {client.email && <span className="text-xs text-white/40">{client.email}</span>}
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "company",
-    header: "Company",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="px-1.5 text-muted-foreground text-white border border-white">
-          {row.original.company}
-        </Badge>
-      </div>
-    ),
+    accessorKey: "project",
+    header: "Project",
+    cell: ({ row }) => {
+      const project = row.original.project;
+      if (!project) return <span className="text-red-400">N/A</span>;
+      if (typeof project === 'string') return <span className="text-red-400">N/A</span>;
+      return <span className="text-base text-purple-200">{project.name || 'N/A'}</span>;
+    },
   },
   {
-    header: "Contact",
-    cell: ({ row }) => (
-      <div className="w-46">
-        <p className="font-medium">{row.original.email}</p>
-        <p className="font-light">{row.original.phone}</p>
-      </div>
-    ),
+    accessorKey: "totalHours",
+    header: "Total Hours",
+    cell: ({ row }) => <span className="text-base text-white">{row.original.totalHours}</span>,
   },
   {
-    accessorKey: "projects",
-    header: "Projects",
-    cell: ({ row }) => (
-      <div className="w-40">
-        {typeof row.original.projects === "string"
-          ? row.original.projects
-          : Array.isArray(row.original.projects)
-            ? row.original.projects.join(", ")
-            : ""}
-      </div>
-    ),
+    accessorKey: "hourlyRate",
+    header: "Hourly Rate",
+    cell: ({ row }) => <span className="text-base text-green-300">${row.original.hourlyRate.toFixed(2)}</span>,
   },
-
+  {
+    accessorKey: "amount",
+    header: "Amount",
+    cell: ({ row }) => <span className="text-base font-bold text-green-400">${row.original.amount.toFixed(2)}</span>,
+  },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-
       const statusColors: Record<string, string> = {
-        active: "border-green-500/20 bg-green-500/10 text-green-400",
-        inactive: "border-red-500/20 bg-red-500/10 text-red-400",
-        archived: "border-orange-500/20 bg-orange-500/10 text-orange-400",
+        draft: "border-gray-500/20 bg-gray-500/10 text-gray-400",
+        sent: "border-blue-500/20 bg-blue-500/10 text-blue-400",
+        paid: "border-green-500/20 bg-green-500/10 text-green-400",
+        overdue: "border-red-500/20 bg-red-500/10 text-red-400",
       };
-
       return (
         <Badge
           variant="outline"
-          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"
-            }`}
+          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"}`}
         >
           <span className="text-xs whitespace-nowrap">{status}</span>
         </Badge>
       );
     },
   },
-
-
-
   {
     id: "actions",
     cell: ({ row }) => {
-      const { id } = row.original;
+      // Support both id and fallback to _id if present (for robustness)
+      // @ts-ignore
+      const id = row.original.id ?? row.original._id;
       const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
-      const setModalClientId = React.useContext(ModalClientIdContext)?.setModalClientId;
+      const [showDelete, setShowDelete] = React.useState(false);
 
       const handleEdit = () => {
         if (router) {
-          router.push(`/admin/clients/edit-client?id=${id}`);
+          router.push(`/admin/invoices/edit-invoice?id=${id}`);
         } else if (typeof window !== 'undefined') {
-          window.location.href = `/admin/clients/edit-client?id=${id}`;
+          window.location.href = `/admin/invoices/edit-invoice?id=${id}`;
+        }
+      };
+
+      const handleDelete = async () => {
+        try {
+          const res = await fetch(`/api/invoice/${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to delete invoice');
+          toast.success('Invoice deleted successfully');
+          setShowDelete(false);
+          if (typeof window !== 'undefined') window.location.reload();
+        } catch (err) {
+          const message = err && typeof err === 'object' && 'message' in err ? (err as any).message : 'Error deleting invoice';
+          toast.error(message);
         }
       };
 
@@ -247,14 +243,40 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-32">
               <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setModalClientId && setModalClientId(id)}>Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowDelete(true)}>Delete</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem>Download</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {showDelete && typeof window !== 'undefined' && (() => {
+            const ReactDOM = require('./ReactDOMClientFix').default;
+            return ReactDOM && ReactDOM.createPortal(
+              <div className="fixed inset-0 z-[99999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'var(--body-bg, rgba(16,18,27,0.85))' }}>
+                <div
+                  className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative"
+                  style={{
+                    zIndex: 100000,
+                    pointerEvents: 'auto',
+                    background: 'var(--body-bg, #10121b)',
+                    backdropFilter: 'none',
+                    boxShadow: 'none',
+                  }}
+                >
+                  <h3 className="text-lg font-semibold mb-2 text-center">Delete Invoice?</h3>
+                  <p className="text-sm text-neutral-300 mb-4 text-center">Are you sure you want to delete this invoice? This action cannot be undone.</p>
+                  <div className="flex gap-2 w-full">
+                    <Button className="flex-1" variant="destructive" style={{ zIndex: 100001 }} onClick={handleDelete}>Delete</Button>
+                    <Button className="flex-1" variant="outline" style={{ zIndex: 100001 }} onClick={() => setShowDelete(false)}>Cancel</Button>
+                  </div>
+                </div>
+              </div>, document.body
+            );
+          })()}
         </>
       );
     },
   },
-]
+];
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -328,7 +350,7 @@ export function DataTable({
       columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => (row.id ? row.id.toString() : ""),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,

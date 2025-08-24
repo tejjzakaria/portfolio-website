@@ -178,7 +178,7 @@ export default function TimerPage() {
 
     return (
         <Navbar currentPath={pathname}>
-            <div className="min-h-screen w-full pt-[8vh]"
+            <div className="min-h-screen w-full pt-[8vh] px-[5vw]"
                 style={{
                     background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
                 }}>
@@ -341,7 +341,7 @@ export default function TimerPage() {
 // Example 2: Projects Page with Active State
 const ProjectsContent = () => {
     return (
-        <div className="flex flex-col items-center justify-start gap-8 border bg-white p-4 dark:border-neutral-700 mx-auto w-full h-full"
+        <div className="flex flex-col items-center justify-start gap-8 border bg-white dark:border-neutral-700 mx-auto w-full h-full"
             style={{
                 background: "rgb(4,7,29)",
                 backgroundColor: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",

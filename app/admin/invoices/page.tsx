@@ -8,35 +8,35 @@ import { useEffect, useState } from "react";
 import { DataTable } from "@/components/InvoicesTable";
 import { IconPlus } from "@tabler/icons-react";
 
-const BillablesContent = () => {
-    const [billables, setBillables] = useState([]);
+const InvoicesContent = () => {
+    const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
-        const fetchBillables = async () => {
+        const fetchInvoices = async () => {
             setLoading(true);
             setError("");
             try {
-                const res = await fetch("/api/billable");
-                if (!res.ok) throw new Error("Failed to fetch billables");
+                const res = await fetch("/api/invoice");
+                if (!res.ok) throw new Error("Failed to fetch invoices");
                 const data = await res.json();
-                setBillables(data || []);
+                setInvoices(data || []);
             } catch (err) {
                 if (err instanceof Error) {
                     setError(err.message);
                 } else {
-                    setError("Error fetching billables");
+                    setError("Error fetching invoices");
                 }
             } finally {
                 setLoading(false);
             }
         };
-        fetchBillables();
+        fetchInvoices();
     }, []);
 
     return (
-        <div className="min-h-screen w-full pt-[8vh]"
+        <div className="min-h-screen w-full pt-[8vh] px-[5vw]"
             style={{
                 background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
             }}>
@@ -57,7 +57,7 @@ const BillablesContent = () => {
                     ) : error ? (
                         <div className="text-red-400 text-center py-8">{error}</div>
                     ) : (
-                        <DataTable data={billables} />
+                        <DataTable data={invoices} />
                     )}
                 </div>
             </div>
@@ -66,13 +66,13 @@ const BillablesContent = () => {
 };
 
 
-export default function BillablesPage() {
+export default function InvoicesPage() {
     // Get current path for active state
     const pathname = usePathname(); // App Router
 
     return (
         <Navbar currentPath={pathname}>
-            <BillablesContent />
+            <InvoicesContent />
         </Navbar>
     );
 }
