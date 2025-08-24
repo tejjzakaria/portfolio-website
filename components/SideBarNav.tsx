@@ -201,28 +201,14 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                     href: "/admin/announcements",
                     icon: <IconSpeakerphone className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
-            ],
-        },
-        {
-            group: "System",
-            items: [
                 {
                     label: "Notifications",
                     href: "/admin/notifications",
                     icon: <IconBell className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
-                {
-                    label: "Statuses",
-                    href: "/admin/statuses",
-                    icon: <IconArrowAutofitHeight className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
-                {
-                    label: "Settings",
-                    href: "/admin/settings",
-                    icon: <IconSettings className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
             ],
         },
+        
         {
             group: "Other",
             items: [
