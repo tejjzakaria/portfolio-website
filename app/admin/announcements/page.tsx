@@ -8,8 +8,28 @@ import { DataTable } from "@/components/AnnouncementsTable";
 import { announcements } from "@/data";
 
 const AnnouncementsContent = () => {
+    const [data, setData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState("");
+
+    React.useEffect(() => {
+        setLoading(true);
+        fetch("/api/announcements")
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch announcements");
+                return res.json();
+            })
+            .then((data) => {
+                setData(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                setError(err.message || "Error fetching announcements");
+                setLoading(false);
+            });
+    }, []);
+
     return (
-        // Fixed Container Component
         <div className="min-h-screen w-full pt-[8vh]"
             style={{
                 background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
@@ -27,7 +47,13 @@ const AnnouncementsContent = () => {
 
                 {/* DataTable Section */}
                 <div className="w-full">
-                    <DataTable data={announcements} />
+                    {loading ? (
+                        <div className="text-white py-8 text-center">Loading announcements...</div>
+                    ) : error ? (
+                        <div className="text-red-400 py-8 text-center">{error}</div>
+                    ) : (
+                        <DataTable data={data} />
+                    )}
                 </div>
             </div>
         </div>

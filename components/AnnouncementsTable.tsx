@@ -53,6 +53,7 @@ import {
 } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { toast } from "sonner"
+import ReactDOM from "react-dom"
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -109,10 +110,13 @@ import {
 } from "@/components/ui/tabs"
 
 export const schema = z.object({
-  id: z.number(),
+  _id: z.string(),
   title: z.string(),
   message: z.string(),
+  author: z.string(),
   status: z.string(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 })
 
 
@@ -167,59 +171,114 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   
 
   {
+    accessorKey: "author",
+    header: "Author",
+    cell: ({ row }) => (
+      <div className="w-32">
+        <p className="font-medium">{row.original.author}</p>
+      </div>
+    ),
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-
       const statusColors: Record<string, string> = {
         active: "border-green-500/20 bg-green-500/10 text-green-400",
-        inactive: "border-red-500/20 bg-red-500/10 text-red-400",
+        archived: "border-red-500/20 bg-red-500/10 text-red-400",
       };
-
       return (
         <Badge
           variant="outline"
-          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"
-            }`}
+          className={`inline-flex items-center justify-center gap-1 px-3 py-1 w-fit [&_svg]:size-3 ${statusColors[status] || "bg-purple-100 text-purple-800"}`}
         >
           <span className="text-xs whitespace-nowrap">{status}</span>
         </Badge>
       );
     },
   },
-
-
-
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <MoreVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const [showConfirm, setShowConfirm] = React.useState(false);
+      const [deleting, setDeleting] = React.useState(false);
+      const announcementId = row.original._id;
+      const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
+
+      const handleEdit = () => {
+        if (router) router.push(`/admin/announcements/edit-announcement?id=${announcementId}`);
+        else window.location.href = `/admin/announcements/edit-announcement?id=${announcementId}`;
+      };
+
+      const handleDelete = async () => {
+        setDeleting(true);
+        try {
+          const res = await fetch(`/api/announcements/${announcementId}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to delete');
+          window.location.reload();
+        } catch (err) {
+          // Use toast for error feedback, matching other modules
+          toast.error('Error deleting announcement.');
+        } finally {
+          setDeleting(false);
+          setShowConfirm(false);
+        }
+      };
+
+      return (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                size="icon"
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowConfirm(true)} className="text-red-500">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {showConfirm && typeof window !== 'undefined' && typeof document !== 'undefined' &&
+            ReactDOM.createPortal(
+              <div style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(0,0,0,0.45)',
+                pointerEvents: 'auto',
+              }}>
+                <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl p-6 w-full max-w-xs flex flex-col items-center relative" style={{zIndex: 10000}}>
+                  <div className="text-lg font-semibold mb-2 text-red-600">Delete Announcement?</div>
+                  <div className="text-neutral-700 dark:text-neutral-300 mb-4 text-center">Are you sure you want to delete this announcement? This action cannot be undone.</div>
+                  <div className="flex gap-4 w-full justify-center">
+                    <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={deleting}>Cancel</Button>
+                    <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )
+          }
+        </>
+      );
+    },
   },
 ]
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
+    id: row.original._id,
   })
 
   return (
@@ -267,7 +326,7 @@ export function DataTable({
   )
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
+    () => data?.map(({ _id }) => _id) || [],
     [data]
   )
 
@@ -281,7 +340,7 @@ export function DataTable({
       columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => row._id.toString(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
