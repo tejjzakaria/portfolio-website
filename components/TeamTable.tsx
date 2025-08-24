@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import ReactDOM from "@/components/ReactDOMClientFix"
 import {
   DndContext,
   KeyboardSensor,
@@ -194,27 +195,76 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   // timestamps columns removed as requested
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <MoreVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const [showConfirm, setShowConfirm] = React.useState(false);
+      const [deleting, setDeleting] = React.useState(false);
+      const memberId = row.original._id;
+      const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
+
+      const handleEdit = () => {
+        if (router) router.push(`/admin/team/edit-member?id=${memberId}`);
+        else window.location.href = `/admin/team/edit-member?id=${memberId}`;
+      };
+
+      const handleDelete = async () => {
+        setDeleting(true);
+        try {
+          const res = await fetch(`/api/team/${memberId}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to delete');
+          window.location.reload();
+        } catch (err) {
+          alert('Error deleting member.');
+        } finally {
+          setDeleting(false);
+          setShowConfirm(false);
+        }
+      };
+
+      return (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                size="icon"
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowConfirm(true)} className="text-red-500">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {showConfirm && typeof window !== 'undefined' && ReactDOM.createPortal(
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.45)',
+              pointerEvents: 'auto',
+            }}>
+              <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl p-6 w-full max-w-xs flex flex-col items-center relative" style={{zIndex: 10000}}>
+                <div className="text-lg font-semibold mb-2 text-red-600">Delete Member?</div>
+                <div className="text-neutral-700 dark:text-neutral-300 mb-4 text-center">Are you sure you want to delete this team member? This action cannot be undone.</div>
+                <div className="flex gap-4 w-full justify-center">
+                  <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={deleting}>Cancel</Button>
+                  <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
+              </div>
+            </div>,
+            document.body as Element
+          )}
+        </>
+      );
+    },
   },
 ];
 
