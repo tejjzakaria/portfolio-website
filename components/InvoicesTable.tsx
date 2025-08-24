@@ -206,6 +206,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const id = row.original.id ?? row.original._id;
       const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
       const [showDelete, setShowDelete] = React.useState(false);
+      const [showPDF, setShowPDF] = React.useState(false);
+      const [pdfBlobUrl, setPdfBlobUrl] = React.useState<string | null>(null);
+      const { PDFDownloadLink, Document, Page, Text, View, StyleSheet } = require('@react-pdf/renderer');
 
       const handleEdit = () => {
         if (router) {
@@ -228,6 +231,195 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         }
       };
 
+      // PDF color palette matching your website theme
+      // Main: #10121b, Accent: #6366f1, Secondary: #a5b4fc, Text: #e0e7ef, Table BG: #181a29, Border: #23243a, Status: #22d3ee, #10b981, #f59e42, #ef4444
+      const styles = StyleSheet.create({
+        page: {
+          padding: 40,
+          fontFamily: 'Helvetica',
+          backgroundColor: '#10121b',
+        },
+        headerBar: {
+          backgroundColor: '#6366f1',
+          color: '#fff',
+          padding: 16,
+          borderRadius: 10,
+          marginBottom: 28,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 4px 24px #6366f1aa',
+        },
+        logo: {
+          fontSize: 26,
+          fontWeight: 700,
+          color: '#fff',
+          letterSpacing: 2,
+        },
+        invoiceTitle: {
+          fontSize: 34,
+          fontWeight: 700,
+          color: '#a5b4fc',
+          marginBottom: 8,
+        },
+        invoiceNumber: {
+          fontSize: 16,
+          color: '#e0e7ef',
+          marginBottom: 24,
+        },
+        section: {
+          marginBottom: 24,
+          padding: 18,
+          backgroundColor: '#181a29',
+          borderRadius: 10,
+          boxShadow: '0 2px 8px #23243a44',
+        },
+        sectionTitle: {
+          fontSize: 16,
+          fontWeight: 700,
+          color: '#a5b4fc',
+          marginBottom: 8,
+        },
+        label: {
+          fontSize: 12,
+          color: '#a5b4fc',
+          marginBottom: 2,
+        },
+        value: {
+          fontSize: 14,
+          marginBottom: 8,
+          color: '#e0e7ef',
+        },
+        table: {
+          display: 'table',
+          width: 'auto',
+          marginVertical: 16,
+          borderRadius: 10,
+          overflow: 'hidden',
+        },
+        tableHeader: {
+          flexDirection: 'row',
+          backgroundColor: '#23243a',
+        },
+        tableHeaderCell: {
+          flex: 1,
+          color: '#a5b4fc',
+          fontWeight: 700,
+          fontSize: 13,
+          padding: 10,
+        },
+        tableRow: {
+          flexDirection: 'row',
+          backgroundColor: '#181a29',
+        },
+        tableCell: {
+          flex: 1,
+          fontSize: 12,
+          padding: 10,
+          color: '#e0e7ef',
+          borderBottom: '1 solid #23243a',
+        },
+        tableCellRight: {
+          textAlign: 'right',
+        },
+        summaryRow: {
+          flexDirection: 'row',
+          backgroundColor: '#23243a',
+        },
+        summaryLabel: {
+          flex: 2,
+          fontSize: 13,
+          fontWeight: 700,
+          color: '#a5b4fc',
+          padding: 10,
+        },
+        summaryValue: {
+          flex: 1,
+          fontSize: 13,
+          fontWeight: 700,
+          color: '#22d3ee',
+          padding: 10,
+          textAlign: 'right',
+        },
+        statusBadge: {
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#fff',
+          borderRadius: 12,
+          padding: '4 12',
+          alignSelf: 'flex-start',
+          marginTop: 8,
+        },
+        footer: {
+          marginTop: 32,
+          textAlign: 'center',
+          color: '#a5b4fc',
+          fontSize: 12,
+        },
+      });
+
+      // Advanced Invoice PDF
+      const InvoicePDF = ({ invoice }: { invoice: any }) => (
+        <Document>
+          <Page size="A4" style={styles.page}>
+            {/* Header Bar with Logo and Date */}
+            <View style={styles.headerBar}>
+              <Text style={styles.logo}>INVOICE</Text>
+              <Text>{new Date(invoice.createdAt || Date.now()).toLocaleDateString()}</Text>
+            </View>
+            {/* Invoice Title and Number */}
+            <Text style={styles.invoiceTitle}>Invoice</Text>
+            <Text style={styles.invoiceNumber}>#{invoice.invoiceNumber}</Text>
+
+            {/* Client & Project Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Billed To</Text>
+              <Text style={styles.value}>{invoice.client?.client || 'N/A'}</Text>
+              {invoice.client?.company && <Text style={styles.value}>{invoice.client.company}</Text>}
+              {invoice.client?.email && <Text style={styles.value}>{invoice.client.email}</Text>}
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Project</Text>
+              <Text style={styles.value}>{invoice.project?.name || 'N/A'}</Text>
+            </View>
+
+            {/* Table Section (if you want to add billables, you can map here) */}
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.tableHeaderCell}>Description</Text>
+                <Text style={[styles.tableHeaderCell, styles.tableCellRight]}>Hours</Text>
+                <Text style={[styles.tableHeaderCell, styles.tableCellRight]}>Rate</Text>
+                <Text style={[styles.tableHeaderCell, styles.tableCellRight]}>Amount</Text>
+              </View>
+              {/* Example row, replace with billables if available */}
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCell}>Service</Text>
+                <Text style={[styles.tableCell, styles.tableCellRight]}>{invoice.totalHours}</Text>
+                <Text style={[styles.tableCell, styles.tableCellRight]}>${invoice.hourlyRate?.toFixed(2)}</Text>
+                <Text style={[styles.tableCell, styles.tableCellRight]}>${invoice.amount?.toFixed(2)}</Text>
+              </View>
+              {/* Add more rows for each billable if needed */}
+            </View>
+
+            {/* Summary Section */}
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryValue}>${invoice.amount?.toFixed(2)}</Text>
+            </View>
+
+            
+
+            {/* Footer */}
+            <Text style={styles.footer}>Thank you for your business!</Text>
+          </Page>
+        </Document>
+      );
+
+      // Download handler using react-pdf
+      const handleDownload = async () => {
+        setShowPDF(true);
+      };
+
       return (
         <>
           <DropdownMenu>
@@ -245,7 +437,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
               <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowDelete(true)}>Delete</DropdownMenuItem>
               <DropdownMenuSeparator/>
-              <DropdownMenuItem>Download</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownload}>Download</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           {showDelete && typeof window !== 'undefined' && (() => {
@@ -268,6 +460,28 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
                     <Button className="flex-1" variant="destructive" style={{ zIndex: 100001 }} onClick={handleDelete}>Delete</Button>
                     <Button className="flex-1" variant="outline" style={{ zIndex: 100001 }} onClick={() => setShowDelete(false)}>Cancel</Button>
                   </div>
+                </div>
+              </div>, document.body
+            );
+          })()}
+          {/* PDF Download Modal/Link */}
+          {showPDF && typeof window !== 'undefined' && (() => {
+            const ReactDOM = require('./ReactDOMClientFix').default;
+            return ReactDOM && ReactDOM.createPortal(
+              <div className="fixed inset-0 z-[99999] flex items-center justify-center" style={{ pointerEvents: 'auto', background: 'rgba(16,18,27,0.85)' }}>
+                <div className="rounded-lg p-6 w-full max-w-xs flex flex-col items-center border border-white/20 relative bg-[#10121b]" style={{zIndex: 100000}}>
+                  <h3 className="text-lg font-semibold mb-2 text-center">Download Invoice PDF</h3>
+                  <p className="text-sm text-neutral-300 mb-4 text-center">Click below to download the invoice as a PDF.</p>
+                  <PDFDownloadLink
+                    document={<InvoicePDF invoice={row.original} />}
+                    fileName={`invoice-${row.original.invoiceNumber}.pdf`}
+                  >
+                    {(props: { blob?: Blob; url?: string; loading: boolean; error?: Error }) =>
+                      props.loading ? 'Generating PDF...' :
+                      <Button className="w-full mb-2">Download PDF</Button>
+                    }
+                  </PDFDownloadLink>
+                  <Button variant="outline" className="w-full" onClick={() => setShowPDF(false)}>Close</Button>
                 </div>
               </div>, document.body
             );
