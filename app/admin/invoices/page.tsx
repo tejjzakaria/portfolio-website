@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
+import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
 import { useEffect, useState } from "react";
@@ -75,13 +76,13 @@ const InvoicesContent = () => {
 
 
 export default function InvoicesPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-
+    const pathname = usePathname();
     return (
-        <Navbar currentPath={pathname}>
-            <InvoicesContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={pathname}>
+                <InvoicesContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }
 

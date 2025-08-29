@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Spotlight } from "@/components/ui/Spotlight";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { FaArrowCircleRight, FaArrowCircleLeft, FaPlusCircle } from "react-icons/fa";
 import { Navbar } from "@/components/SideBarNav";
@@ -21,10 +22,13 @@ const BottomGradient = () => (
 
 const AddClientPage = () => {
   const [form, setForm] = useState({
-    client: "",
-    company: "",
+    name: "",
     email: "",
-    phone: "",
+    password: "",
+    phoneNumber: "",
+    company: "",
+    role: "user",
+    status: "active",
     projects: ""
   });
   const [loading, setLoading] = useState(false);
@@ -41,19 +45,27 @@ const AddClientPage = () => {
     setSuccess("");
     setError("");
     try {
-      const res = await fetch("/api/clients", {
+      const res = await fetch("/api/auth/admin/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
-          projects: form.projects ? form.projects.split(",").map((p) => p.trim()) : []
+          email: form.email,
+          password: form.password,
+          name: form.name,
+          role: form.role,
+          data: {
+            phoneNumber: form.phoneNumber,
+            company: form.company,
+            status: form.status,
+            projects: form.projects ? form.projects.split(",").map((p) => p.trim()) : []
+          }
         })
       });
-      if (!res.ok) throw new Error("Failed to add client");
-      setSuccess("Client added successfully!");
-      setForm({ client: "", company: "", email: "", phone: "", projects: "" });
+      if (!res.ok) throw new Error("Failed to add user");
+      setSuccess("User added successfully!");
+      setForm({ name: "", email: "", password: "", phoneNumber: "", company: "", role: "user", status: "active", projects: "" });
     } catch (err: any) {
-      setError(err.message || "Error adding client");
+      setError(err.message || "Error adding user");
     } finally {
       setLoading(false);
     }
@@ -78,20 +90,50 @@ const AddClientPage = () => {
             {success && <div className="my-4 border-green-500/20 bg-green-500/10 text-green-400 text-center p-2 rounded-lg">{success}</div>}
             {error && <div className="my-4 border-red-500/20 bg-red-500/10 text-red-400 text-center p-2 rounded-lg">{error}</div>}
             <LabelInputContainer className="mb-4">
-              <Label htmlFor="client">Client Name</Label>
-              <Input id="client" name="client" placeholder="Enter client name" type="text" value={form.client} onChange={handleChange} required />
-            </LabelInputContainer>
-            <LabelInputContainer className="mb-4">
-              <Label htmlFor="company">Company</Label>
-              <Input id="company" name="company" placeholder="Enter company name" type="text" value={form.company} onChange={handleChange} required />
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" name="name" placeholder="Enter full name" type="text" value={form.name} onChange={handleChange} required />
             </LabelInputContainer>
             <LabelInputContainer className="mb-4">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" placeholder="Enter email" type="email" value={form.email} onChange={handleChange} required />
             </LabelInputContainer>
             <LabelInputContainer className="mb-4">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" placeholder="Enter phone number" type="text" value={form.phone} onChange={handleChange} required />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" placeholder="Enter password" type="password" value={form.password} onChange={handleChange} required />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input id="phoneNumber" name="phoneNumber" placeholder="Enter phone number" type="text" value={form.phoneNumber} onChange={handleChange} />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="company">Company</Label>
+              <Input id="company" name="company" placeholder="Enter company name" type="text" value={form.company} onChange={handleChange} />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="role">Role</Label>
+              <Select value={form.role} onValueChange={(value) => setForm(f => ({ ...f, role: value }))}>
+                <SelectTrigger id="role" className="w-full">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="status">Status</Label>
+              <Select value={form.status} onValueChange={(value) => setForm(f => ({ ...f, status: value }))}>
+                <SelectTrigger id="status" className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="banned">Banned</SelectItem>
+                </SelectContent>
+              </Select>
             </LabelInputContainer>
             <LabelInputContainer className="mb-4">
               <Label htmlFor="projects">Projects (comma separated)</Label>

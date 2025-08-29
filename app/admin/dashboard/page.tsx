@@ -1,23 +1,25 @@
-"use client";
-import React from "react";
-import { usePathname } from "next/navigation"; // For App Router
 
-import { TrendingDownIcon, TrendingUpIcon } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import React from "react";
+import { usePathname, redirect } from "next/navigation";
+import AdminSessionGuard from "../AdminSessionGuard";
+import { TrendingDownIcon, TrendingUpIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
     Card,
     CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import { DataTable } from "@/components/UsersTable";
 import { clients } from "@/data";
 import RecentProjectsDash from "@/components/RecentProjectsDash";
-import { Navbar } from "@/components/SideBarNav"; // Import the separated navbar
+import { Navbar } from "@/components/SideBarNav";
 
 // Dashboard content component (without navbar)
-const DashboardContent = () => {
+function DashboardContent() {
     const Step = ({ title }: { title: string }) => {
         return (
             <li className="flex gap-2 items-start">
@@ -160,9 +162,11 @@ export default function Dashboard() {
     // Extract the last segment for active state (e.g., 'dashboard')
     const currentSection = pathname.split("/")[2] || "dashboard";
     return (
-        <Navbar currentPath={"/admin/" + currentSection}>
-            <DashboardContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={"/admin/" + currentSection}>
+                <DashboardContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }
 

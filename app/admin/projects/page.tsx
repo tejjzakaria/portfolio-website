@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
+import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
 import { useEffect, useState } from "react";
@@ -74,14 +75,13 @@ const ProjectsContent = () => {
 };
 
 export default function ProjectsPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-    // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
+    const pathname = usePathname();
     return (
-        <Navbar currentPath={pathname}>
-            <ProjectsContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={pathname}>
+                <ProjectsContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }
 

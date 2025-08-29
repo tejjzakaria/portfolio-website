@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
+import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
 import { DataTable } from "@/components/TeamTable";
@@ -72,14 +73,13 @@ const TeamContent = () => {
 };
 
 export default function TeamPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-    // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
+    const pathname = usePathname();
     return (
-        <Navbar currentPath={pathname}>
-            <TeamContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={pathname}>
+                <TeamContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }
 

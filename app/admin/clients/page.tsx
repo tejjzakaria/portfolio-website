@@ -2,32 +2,44 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation"; // For App Router
+import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
-import { DataTable } from "@/components/UsersTable";
+import { DataTable, schema } from "@/components/UsersTable";
+import { z } from "zod";
 import { IconPlus } from "@tabler/icons-react";
 
 
-
-
 const ClientsContent = () => {
-
-    const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [clients, setClients] = useState<z.infer<typeof schema>[]>([]);
 
     useEffect(() => {
-        fetch("/api/clients")
-            .then((res) => res.json())
-            .then((data) => {
-                console.log('Fetched clients:', data.clients);
-                setClients(data.clients || []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setLoading(false);
-            });
+        const fetchClients = async () => {
+            try {
+                // Fetch users from the better-auth-users API route
+                const response = await fetch('/api/better-auth-users');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                // Defensive mapping to match DataTable schema (id/status)
+                const users = data.clients || data.users || [];
+                const mapped = users.map((u: any) => ({
+                    ...u,
+                    _id: u._id || u.id || u.userId || '',
+                    status: u.status || u.accountStatus || u.active || 'Active',
+                }));
+                setClients(mapped);
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+            }
+        };
+
+        fetchClients();
     }, []);
+
+
+
 
 
     return (
@@ -67,14 +79,13 @@ const ClientsContent = () => {
 };
 
 export default function ClientsPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-    // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
+    const pathname = usePathname();
     return (
-        <Navbar currentPath={pathname}>
-            <ClientsContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={pathname}>
+                <ClientsContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }
 

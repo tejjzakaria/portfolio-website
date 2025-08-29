@@ -5,35 +5,34 @@ import { usePathname } from "next/navigation"; // For App Router
 import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
-import { useEffect, useState } from "react";
-import { DataTable } from "@/components/BillablesTable";
+
+// import { team } from "@/data";
 import { IconPlus } from "@tabler/icons-react";
+import { TicketsTable } from "@/components/TicketsTable";
 
-const BillablesContent = () => {
-    const [billables, setBillables] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+const TicketsContent = () => {
+    const [tickets, setTickets] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchBillables = async () => {
-            setLoading(true);
-            setError("");
-            try {
-                const res = await fetch("/api/billable");
-                if (!res.ok) throw new Error("Failed to fetch billables");
-                const data = await res.json();
-                setBillables(data || []);
-            } catch (err) {
-                if (err instanceof Error) {
-                    setError(err.message);
-                } else {
-                    setError("Error fetching billables");
-                }
-            } finally {
+    React.useEffect(() => {
+        setLoading(true);
+        fetch("/api/tickets")
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch tickets");
+                return res.json();
+            })
+            .then((data) => {
+                // Handle both array and object-wrapped responses
+                if (Array.isArray(data)) setTickets(data);
+                else if (Array.isArray(data.tickets)) setTickets(data.tickets);
+                else setTickets([]);
                 setLoading(false);
-            }
-        };
-        fetchBillables();
+            })
+            .catch((err) => {
+                setError(err.message || "Error fetching tickets");
+                setLoading(false);
+            });
     }, []);
 
     return (
@@ -42,23 +41,34 @@ const BillablesContent = () => {
                 background: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
             }}>
             <div className="container mx-auto px-4 py-8 max-w-7xl">
+                {/* Header Section */}
                 <div className="flex flex-row justify-between items-center">
                     <div className="mb-8 text-center sm:text-left">
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-                            All Billables
+                            All Tickets
                         </h1>
                         <p className="text-neutral-400 text-sm sm:text-base">
-                            A list of all billable work sessions.
+                            A list of all tickets.
                         </p>
                     </div>
+                    <div>
+                        <a href="/admin/tickets/add-ticket">
+                        <button className="flex justify-center items-center gap-1 group/btn relative h-10 rounded-lg border border-blue-400/60 bg-gradient-to-br from-blue-500/40 to-cyan-500/30 backdrop-blur-xl backdrop-saturate-200 font-medium text-white transition-all duration-300 hover:from-blue-500/60 hover:to-cyan-500/50 hover:border-blue-300/80 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-98 dark:border-blue-400/40 dark:from-blue-500/35 dark:to-cyan-500/25 dark:hover:from-blue-500/55 dark:hover:to-cyan-500/45 dark:hover:border-blue-300/60 dark:hover:shadow-blue-500/40 p-3">
+                            New
+                            <IconPlus/>
+                        </button>
+                        </a>
+                    </div>
                 </div>
+
+                {/* DataTable Section */}
                 <div className="w-full">
                     {loading ? (
-                        <div className="text-white text-center py-8">Loading billables...</div>
+                        <div className="text-white py-8 text-center">Loading tickets...</div>
                     ) : error ? (
-                        <div className="text-red-400 text-center py-8">{error}</div>
+                        <div className="text-red-400 py-8 text-center">{error}</div>
                     ) : (
-                        <DataTable data={billables} />
+                        <TicketsTable data={tickets} />
                     )}
                 </div>
             </div>
@@ -66,19 +76,68 @@ const BillablesContent = () => {
     );
 };
 
-
-export default function BillablesPage() {
+export default function TicketsPage() {
     const pathname = usePathname();
     return (
         <AdminSessionGuard>
             <Navbar currentPath={pathname}>
-                <BillablesContent />
+                <TicketsContent />
             </Navbar>
         </AdminSessionGuard>
     );
 }
 
+// Example 2: Projects Page with Active State
+const ProjectsContent = () => {
+    return (
+        <div className="flex flex-col items-center justify-start gap-8 border bg-white p-4 dark:border-neutral-700 mx-auto w-full h-full"
+            style={{
+                background: "rgb(4,7,29)",
+                backgroundColor: "linear-gradient(90deg, rgba(4,7,29,1) 0%, rgba(12,14,35,1) 100%)",
+            }}>
+            <div className="w-full max-w-7xl pt-8">
+                <h1 className="text-3xl font-bold tracking-tight text-white mb-8">Projects Overview</h1>
+                {/* Your projects content here */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 group hover:bg-white/10 transition-all duration-300">
+                        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">Project Alpha</h3>
+                        <p className="text-neutral-300">Description of project alpha...</p>
+                        <div className="mt-4 flex gap-2">
+                            <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-500/30">
+                                Active
+                            </span>
+                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                                Frontend
+                            </span>
+                        </div>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 group hover:bg-white/10 transition-all duration-300">
+                        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">Project Beta</h3>
+                        <p className="text-neutral-300">Description of project beta...</p>
+                        <div className="mt-4 flex gap-2">
+                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full border border-yellow-500/30">
+                                In Progress
+                            </span>
+                            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30">
+                                Full Stack
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
+export function ProjectsPage() {
+    const pathname = usePathname();
+
+    return (
+        <Navbar currentPath={pathname}>
+            <ProjectsContent />
+        </Navbar>
+    );
+}
 
 // Example 3: Settings Page with Active State
 const SettingsContent = () => {

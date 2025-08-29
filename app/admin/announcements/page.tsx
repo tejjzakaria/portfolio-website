@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation"; // For App Router
+import AdminSessionGuard from "../AdminSessionGuard";
 // import { useRouter } from "next/router"; // For Pages Router
 import { Navbar } from "@/components/SideBarNav";
 import { DataTable } from "@/components/AnnouncementsTable";
@@ -72,13 +73,12 @@ const AnnouncementsContent = () => {
 };
 
 export default function AnnouncementsPage() {
-    // Get current path for active state
-    const pathname = usePathname(); // App Router
-    // const router = useRouter(); const pathname = router.pathname; // Pages Router
-
+    const pathname = usePathname();
     return (
-        <Navbar currentPath={pathname}>
-            <AnnouncementsContent />
-        </Navbar>
+        <AdminSessionGuard>
+            <Navbar currentPath={pathname}>
+                <AnnouncementsContent />
+            </Navbar>
+        </AdminSessionGuard>
     );
 }

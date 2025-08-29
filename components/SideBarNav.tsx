@@ -49,21 +49,31 @@ interface CustomSidebarLinkProps {
 }
 
 // Compact Logout button for same row as user profile
-const LogoutLink = ({ href }: { href: string }) => {
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { UserProfileSidebar } from "./UserProfileSidebar";
+
+export const LogoutLink = () => {
+    const router = useRouter();
+    const handleLogout = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        await authClient.signOut();
+        router.push("/login");
+    };
     return (
-        <a
-            href={href}
+        <button
+            onClick={handleLogout}
             className="group flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ease-in-out relative overflow-hidden border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 hover:border-red-400/50 text-red-300 hover:text-red-200 flex-shrink-0"
             title="Logout"
+            type="button"
         >
             {/* Animated background on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-red-600/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg" />
-            
             {/* Icon with special styling */}
             <div className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-12">
                 <IconArrowLeft className="h-5 w-5 shrink-0" />
             </div>
-        </a>
+        </button>
     );
 };
 
@@ -83,7 +93,7 @@ const CustomSidebarLink = ({ link, isActive }: CustomSidebarLinkProps) => {
         >
             {/* Animated background for both active and hover */}
             <div className={cn(
-                "absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-lg transition-opacity duration-300",
+                "absolute inset-0 bg-gradient-to-r bg-[#6067b0] rounded-lg transition-opacity duration-300",
                 {
                     "opacity-100": isActive, // Always visible when active
                     "opacity-0 group-hover:opacity-100": !isActive, // Only on hover when inactive
@@ -201,11 +211,7 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                     href: "/admin/announcements",
                     icon: <IconSpeakerphone className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
-                {
-                    label: "Notifications",
-                    href: "/admin/notifications",
-                    icon: <IconBell className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
+                
             ],
         },
         
@@ -213,13 +219,8 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
             group: "Other",
             items: [
                 {
-                    label: "Github",
-                    href: "/admin/github",
-                    icon: <IconBrandGithub className="h-5 w-5 shrink-0 transition-colors duration-200" />,
-                },
-                {
                     label: "Documentation",
-                    href: "/admin/docs",
+                    href: "/admin/documentation",
                     icon: <IconQuestionMark className="h-5 w-5 shrink-0 transition-colors duration-200" />,
                 },
                 
@@ -266,25 +267,7 @@ export function Navbar({ children, className, currentPath }: NavbarProps) {
                             ))}
                         </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                        {/* User Profile */}
-                        <SidebarLink
-                            link={{
-                                label: "Z.Tejjani",
-                                role: "The Bossman",
-                                href: "",
-                                icon: (
-                                    <img
-                                        src="/avatar.png"
-                                        className="h-10 w-10 object-cover shrink-0 rounded-full"
-                                        alt="Avatar"
-                                    />
-                                ),
-                            }}
-                        />
-                        {/* Logout button on the same row */}
-                        <LogoutLink href="./" />
-                    </div>
+                    <UserProfileSidebar />
                 </SidebarBody>
             </Sidebar>
             {/* Content area */}
